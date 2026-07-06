@@ -10,7 +10,7 @@ import {
 import { auth, db, signInWithEmailAndPassword, createUserWithEmailAndPassword, doc, getDoc, setDoc } from './firebase';
 
 /* ==========================================================================
-   EXAM TRACKER — Fixed & Themed Version
+   EXAM TRACKER — Liquid Edition ✨
    Palette Applied:
    #d3d6eb (Light Text/Primary)
    #bbbcde (Accent/Active)
@@ -24,15 +24,16 @@ const GlobalStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;800&display=swap');
 
+    body { 
+      background: #1b1b36; 
+      margin: 0;
+      color: #d3d6eb;
+    }
+
     .font-display { font-family: 'Sora', 'Inter', sans-serif; }
     .font-mono-stat { font-family: 'JetBrains Mono', monospace; }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes auroraMove {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(4%, -6%) scale(1.08); }
-      66% { transform: translate(-5%, 4%) scale(0.95); }
-    }
 
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: rgba(163, 164, 196, 0.2); border-radius: 999px; }
@@ -65,140 +66,108 @@ const IconLayers = (p) => <Icon {...p} path="M12 3L3 8l9 5 9-5-9-5zM3 12l9 5 9-5
 const IconCloud = (p) => <Icon {...p} path="M7 18a4 4 0 01-.6-7.96A5.5 5.5 0 0117 9a4.5 4.5 0 01-1 8.9H7z" />;
 const IconBolt = (p) => <Icon {...p} path="M13 2L4.5 13H11l-1 9L19.5 11H13l1-9z" />;
 const IconTrophy = (p) => <Icon {...p} path="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0V4zM7 4H4a3 3 0 003 3M17 4h3a3 3 0 01-3 3" />;
-const IconShield = (p) => <Icon {...p} path="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" />;
-const IconBell = (p) => <Icon {...p} path="M15 17h5l-1.4-2.1A2 2 0 0118 13.6V11a6 6 0 10-12 0v2.6c0 .3-.1.6-.3.9L4.4 17H9m6 0a3 3 0 11-6 0m6 0H9" />;
 const IconBookOpen = (p) => <Icon {...p} path="M12 6.5C10 5 6 4.5 3 5v13c3-.5 7 0 9 1.5 2-1.5 6-2 9-1.5V5c-3-.5-7 0-9 1.5z" />;
 const IconTrash = (p) => <Icon {...p} path="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />;
 
 const TOAST_ICONS = { success: IconCheck, error: IconX, info: IconSparkle };
 
-// --- Interactive Neuron Background (Updated Colors) ---
-const NeuronBackground = ({ aurora = false, reduce = false }) => {
-  const canvasRef = useRef(null);
+// --- AWARD-WINNING LIQUID MOTION BACKGROUND ✨ ---
+const LiquidBackground = () => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const reduce = useReducedMotion();
+
+  const x = useSpring(mouseX, { damping: 30, stiffness: 120 });
+  const y = useSpring(mouseY, { damping: 30, stiffness: 120 });
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    let animationFrameId;
-    let particles = [];
-    const numParticles = reduce ? 32 : 90;
-    let mouse = { x: null, y: null, radius: 180 };
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    if (reduce) return;
+    const move = (e) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
-    window.addEventListener('resize', resize);
-    resize();
-
-    const handleMouseMove = (e) => { mouse.x = e.x; mouse.y = e.y; };
-    const handleMouseOut = () => { mouse.x = null; mouse.y = null; };
-    if (!reduce) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseout', handleMouseOut);
-    }
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.vx = (Math.random() - 0.5) * (reduce ? 0.5 : 1.5);
-        this.vy = (Math.random() - 0.5) * (reduce ? 0.5 : 1.5);
-        this.radius = Math.random() * 2 + 1;
-      }
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0 || this.x > canvas.width) this.vx = -this.vx;
-        if (this.y < 0 || this.y > canvas.height) this.vy = -this.vy;
-        if (mouse.x != null && mouse.y != null) {
-          let dx = mouse.x - this.x;
-          let dy = mouse.y - this.y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < mouse.radius) {
-            const forceDirectionX = dx / distance;
-            const forceDirectionY = dy / distance;
-            const force = (mouse.radius - distance) / mouse.radius;
-            this.x -= forceDirectionX * force * 3;
-            this.y -= forceDirectionY * force * 3;
-          }
-        }
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(187, 188, 222, 0.4)'; // #bbbcde
-        ctx.fill();
-      }
-    }
-
-    const init = () => {
-      particles = [];
-      for (let i = 0; i < numParticles; i++) particles.push(new Particle());
-    };
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
-        for (let j = i; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x;
-          let dy = particles[i].y - particles[j].y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 120) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(91, 97, 144, ${1 - distance / 120})`; // #5b6190
-            ctx.lineWidth = 1;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-        if (mouse.x != null && mouse.y != null) {
-          let dx = particles[i].x - mouse.x;
-          let dy = particles[i].y - mouse.y;
-          let distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 160) {
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(163, 164, 196, ${1 - distance / 160})`; // #a3a4c4
-            ctx.lineWidth = 1.5;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(mouse.x, mouse.y);
-            ctx.stroke();
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    init();
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseout', handleMouseOut);
-    };
+    window.addEventListener("mousemove", move);
+    return () => window.removeEventListener("mousemove", move);
   }, [reduce]);
 
+  // Generate tiny floating particles with parallax
+  const particles = Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 3 + 1,
+    duration: Math.random() * 15 + 15,
+    delay: Math.random() * 10,
+  }));
+
   return (
-    <div className="fixed inset-0 z-[-1] bg-[#1b1b36] overflow-hidden">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] z-0"></div>
-      {aurora && (
-        <div className="absolute inset-0 z-[1] pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#5b6190]/20 rounded-full blur-[120px] motion-safe:animate-[auroraMove_22s_ease-in-out_infinite]" />
-          <div className="absolute bottom-[-15%] right-[-10%] w-[55%] h-[55%] bg-[#a3a4c4]/10 rounded-full blur-[130px] motion-safe:animate-[auroraMove_26s_ease-in-out_infinite_reverse]" />
-          <div className="absolute top-[30%] right-[15%] w-[35%] h-[35%] bg-[#bbbcde]/10 rounded-full blur-[110px] motion-safe:animate-[auroraMove_30s_ease-in-out_infinite]" />
-        </div>
-      )}
-      <canvas ref={canvasRef} className="absolute inset-0 z-10" />
+    <div className="fixed inset-0 overflow-hidden -z-10 bg-[#1b1b36] pointer-events-none">
+      {/* SVG Gooey Filter for Liquid merging */}
+      <svg className="absolute w-0 h-0">
+        <filter id="goo">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 35 -15" result="goo" />
+          <feBlend in="SourceGraphic" in2="goo" />
+        </filter>
+      </svg>
+
+      <div style={{ filter: "url(#goo)", width: "100%", height: "100%", position: "absolute" }}>
+        
+        {/* Main Mouse-Following Radial Blob */}
+        {!reduce && (
+          <motion.div
+            style={{ x, y, translateX: "-50%", translateY: "-50%", willChange: "transform" }}
+            className="absolute w-[450px] h-[450px] rounded-full opacity-60 mix-blend-screen"
+          >
+            <div className="w-full h-full rounded-full bg-[#5b6190] blur-[90px]" />
+          </motion.div>
+        )}
+
+        {/* Morphing Background Blobs */}
+        <motion.div
+          animate={{ x: [0, 150, -100, 0], y: [0, -150, 120, 0], scale: [1, 1.15, 0.9, 1] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-[15%] top-[15%] w-[450px] h-[450px] rounded-full blur-[110px] opacity-40 bg-[#a3a4c4]"
+          style={{ willChange: "transform" }}
+        />
+        
+        <motion.div
+          animate={{ x: [0, -180, 100, 0], y: [0, 180, -120, 0], scale: [1, 0.9, 1.2, 1] }}
+          transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute right-[10%] bottom-[10%] w-[550px] h-[550px] rounded-full blur-[130px] opacity-40 bg-[#2f315c]"
+          style={{ willChange: "transform" }}
+        />
+        
+        <motion.div
+          animate={{ x: [0, 80, -80, 0], y: [0, -100, 70, 0], scale: [1, 1.05, 0.95, 1] }}
+          transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
+          className="absolute left-[50%] top-[50%] w-[600px] h-[600px] rounded-full blur-[140px] opacity-35 bg-[#bbbcde] -translate-x-1/2 -translate-y-1/2"
+          style={{ willChange: "transform" }}
+        />
+      </div>
+
+      {/* Floating Sparkle Particles */}
+      <div className="absolute inset-0">
+        {particles.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ y: `${p.y}vh`, x: `${p.x}vw`, opacity: 0 }}
+            animate={{ y: [`${p.y}vh`, `${p.y - 15}vh`], opacity: [0, 0.6, 0] }}
+            transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "linear" }}
+            className="absolute rounded-full bg-[#d3d6eb]"
+            style={{ width: p.size, height: p.size, willChange: "transform, opacity" }}
+          />
+        ))}
+      </div>
+
+      {/* Perlin/Simplex Noise Distort Overlay */}
+      <div className="absolute inset-0 opacity-[0.04] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
     </div>
   );
 };
 
-// --- Progress Circle (Fixed Layout Overlap)[cite: 1]---
+
+// --- Progress Circle ---
 const ProgressCircle = ({ progress, size = 60, strokeWidth = 5, color = 'stroke-[#bbbcde]' }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
@@ -207,7 +176,6 @@ const ProgressCircle = ({ progress, size = 60, strokeWidth = 5, color = 'stroke-
 
   return (
     <div className={`relative flex items-center justify-center ${isComplete ? 'motion-safe:animate-pulse' : ''}`} style={{ width: size, height: size }}>
-      {/* Added overflow-visible to prevent drop shadow from clipping on edges[cite: 1]*/}
       <svg className="transform -rotate-90 overflow-visible" width={size} height={size}>
         <circle className="stroke-[#5b6190]/30" strokeWidth={strokeWidth} fill="transparent" r={radius} cx={size / 2} cy={size / 2} />
         <circle
@@ -249,7 +217,7 @@ const UrgencySlider = ({ dateString }) => {
   }
 
   return (
-    <div className={`mt-4 mb-5 p-3 rounded-xl border ${trackColor} bg-[#2f315c] transition-all duration-300`}>
+    <div className={`mt-4 mb-5 p-3 rounded-xl border ${trackColor} bg-[#1b1b36]/60 backdrop-blur-sm transition-all duration-300`}>
       <div className="flex justify-between items-center text-[10px] uppercase tracking-widest mb-2">
         <span className="text-[#a3a4c4] font-semibold flex items-center gap-1.5">Timeline</span>
         <span className={`${textColor} font-bold font-mono-stat`}>{label}</span>
@@ -383,7 +351,7 @@ const ToastStack = ({ toasts, onDismiss }) => (
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 60, scale: 0.9, transition: { duration: 0.2 } }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-            className={`flex items-center gap-3 bg-[#2f315c] border ${tone} rounded-2xl px-4 py-3.5 shadow-2xl cursor-pointer`}
+            className={`flex items-center gap-3 bg-[#2f315c]/90 backdrop-blur-xl border ${tone} rounded-2xl px-4 py-3.5 shadow-2xl cursor-pointer`}
             onClick={() => onDismiss(t.id)}
           >
             <ToastIcon className="w-5 h-5 shrink-0" />
@@ -395,18 +363,16 @@ const ToastStack = ({ toasts, onDismiss }) => (
   </div>
 );
 
-// --- Floating-label glass input (Fixed Label Overlap)[cite: 1]---
 const FloatingInput = ({ label, type = 'text', value, onChange, icon: FieldIcon, required, name, autoComplete }) => {
   const [focused, setFocused] = useState(false);
   const active = focused || (value && value.length > 0);
   return (
-    <div className={`relative rounded-xl border bg-[#1b1b36] transition-all duration-300 ${focused ? 'border-[#bbbcde] shadow-[0_0_0_3px_rgba(187,188,222,0.12)]' : 'border-[#5b6190]'}`}>
+    <div className={`relative rounded-xl border bg-[#1b1b36]/60 backdrop-blur-sm transition-all duration-300 ${focused ? 'border-[#bbbcde] shadow-[0_0_0_3px_rgba(187,188,222,0.12)]' : 'border-[#5b6190]'}`}>
       {FieldIcon && <FieldIcon className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${focused ? 'text-[#bbbcde]' : 'text-[#a3a4c4]'}`} />}
       <input
         type={type} name={name} required={required} autoComplete={autoComplete}
         value={value} onChange={onChange}
         onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        // Increased pt-6 to pt-7 and adjusted label coordinates below to prevent overlap[cite: 1]
         className={`peer w-full bg-transparent text-[#d3d6eb] outline-none pt-7 pb-2 ${FieldIcon ? 'pl-11' : 'pl-4'} pr-4 text-sm`}
       />
       <label className={`absolute pointer-events-none transition-all duration-200 ${FieldIcon ? 'left-11' : 'left-4'} ${active ? 'top-1.5 text-[10px] uppercase tracking-wider text-[#bbbcde] font-semibold' : 'top-1/2 -translate-y-1/2 text-sm text-[#a3a4c4]'}`}>
@@ -508,14 +474,12 @@ const AnimatedCheckbox = ({ checked, onChange }) => {
   );
 };
 
-// --- Native Date Picker Wrapper (Fixes Mobile Visibility & PC Typing)[cite: 1]---
 const NativeDatePicker = ({ value, onChange, placeholder = 'Select date', compact = false }) => {
   const displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : placeholder;
   return (
-    <div className={`relative flex items-center gap-2 bg-[#1b1b36] border border-[#5b6190] rounded-xl outline-none transition-all focus-within:border-[#bbbcde] hover:border-[#a3a4c4] ${compact ? 'px-2.5 py-1.5 text-xs' : 'p-3 text-sm w-full'}`}>
+    <div className={`relative flex items-center gap-2 bg-[#1b1b36]/60 backdrop-blur-sm border border-[#5b6190] rounded-xl outline-none transition-all focus-within:border-[#bbbcde] hover:border-[#a3a4c4] ${compact ? 'px-2.5 py-1.5 text-xs' : 'p-3 text-sm w-full'}`}>
       <IconCalendar className={`w-4 h-4 shrink-0 ${value ? 'text-[#bbbcde]' : 'text-[#a3a4c4]'}`} />
       
-      {/* Invisible actual input overlapping exactly over the styled text to trigger native picker[cite: 1]*/}
       <input
         type="date"
         value={value || ''}
@@ -530,7 +494,7 @@ const NativeDatePicker = ({ value, onChange, placeholder = 'Select date', compac
   );
 };
 
-// --- Custom Digital Clock Widget (Derived from image_c16de2.png) ---
+// --- Custom Digital Clock Widget (Made Smaller) ---
 const ClockWidget = () => {
   const [time, setTime] = useState(new Date());
 
@@ -546,23 +510,22 @@ const ClockWidget = () => {
   const monthName = time.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
 
   return (
-    <div className="bg-[#2f315c] border border-[#5b6190] rounded-3xl p-6 sm:p-8 flex items-center justify-between shadow-2xl relative overflow-hidden min-h-[160px] w-full max-w-sm ml-auto">
-      <div className="flex flex-col text-[#d3d6eb] font-mono-stat font-bold leading-none tracking-[0.2em] z-10" style={{ fontSize: '4.5rem' }}>
+    <div className="bg-[#2f315c]/70 backdrop-blur-xl border border-[#5b6190] rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-2xl relative overflow-hidden h-[120px] w-full max-w-[240px] ml-auto">
+      <div className="flex flex-col text-[#d3d6eb] font-mono-stat font-bold leading-none tracking-[0.2em] z-10" style={{ fontSize: '2.75rem' }}>
         <span className="opacity-90">{hours}</span>
         <span className="text-[#a3a4c4] drop-shadow-md">{minutes}</span>
       </div>
       
-      <div className="flex flex-col items-end text-right justify-center h-full relative z-10 w-16">
-        <div className="bg-white text-rose-500 text-[8px] font-black px-2 py-0.5 rounded-full tracking-widest origin-right -rotate-90 absolute right-1 top-8 shadow-sm">
+      <div className="flex flex-col items-end text-right justify-center h-full relative z-10 w-12">
+        <div className="bg-white text-rose-500 text-[6px] font-black px-1.5 py-[3px] rounded-full tracking-widest origin-right -rotate-90 absolute right-0 top-6 shadow-sm">
           {dayName}
         </div>
-        <div className="text-xl font-display font-medium text-[#1b1b36] origin-right -rotate-90 absolute right-6 bottom-4 whitespace-nowrap tracking-wider flex gap-1 items-center">
-          <span className="font-bold text-[#bbbcde] text-2xl">{dateNum},</span>
-          <span className="text-[#a3a4c4]">{monthName}</span>
+        <div className="text-base font-display font-medium text-[#1b1b36] origin-right -rotate-90 absolute right-[18px] bottom-[18px] whitespace-nowrap tracking-wider flex gap-1 items-center">
+          <span className="font-bold text-[#bbbcde] text-xl">{dateNum},</span>
+          <span className="text-[#a3a4c4] text-[10px]">{monthName}</span>
         </div>
       </div>
       
-      {/* Subtle aesthetic backdrop for the clock */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#d3d6eb]/5 to-transparent pointer-events-none" />
     </div>
   );
@@ -583,11 +546,11 @@ const FeatureCard = ({ icon: FeatureIcon, title, desc, index, reduce }) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay: reduce ? 0 : 0.15 + index * 0.07, ease: 'easeOut' }}
     whileHover={reduce ? {} : { y: -4 }}
-    className="group relative bg-[#2f315c] border border-[#5b6190] rounded-2xl p-4 transition-colors duration-300 overflow-hidden shadow-lg"
+    className="group relative bg-[#2f315c]/70 backdrop-blur-md border border-[#5b6190] rounded-2xl p-4 transition-colors duration-300 overflow-hidden shadow-lg"
   >
     <div className="absolute -inset-8 bg-[#bbbcde]/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     <div className="relative flex items-start gap-3">
-      <div className="w-9 h-9 shrink-0 rounded-lg bg-[#1b1b36] border border-[#5b6190] flex items-center justify-center text-[#bbbcde] group-hover:rotate-6 group-hover:scale-110 transition-transform duration-300">
+      <div className="w-9 h-9 shrink-0 rounded-lg bg-[#1b1b36]/80 border border-[#5b6190] flex items-center justify-center text-[#bbbcde] group-hover:rotate-6 group-hover:scale-110 transition-transform duration-300">
         <FeatureIcon className="w-4 h-4" />
       </div>
       <div>
@@ -614,7 +577,7 @@ const TiltLoginCard = ({ children, shakeSignal }) => {
       onMouseMove={handleMove} onMouseLeave={reset}
       style={{ rotateX, rotateY, transformPerspective: 800 }}
       animate={controls}
-      className="relative bg-[#2f315c] border border-[#5b6190] p-8 sm:p-10 rounded-3xl shadow-[0_8px_40px_rgba(27,27,54,0.55)]"
+      className="relative bg-[#2f315c]/80 backdrop-blur-2xl border border-[#5b6190] p-8 sm:p-10 rounded-3xl shadow-[0_8px_40px_rgba(27,27,54,0.55)]"
     >
       <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-[#bbbcde]/20 via-transparent to-[#5b6190]/20 -z-10 blur-xl pointer-events-none" />
       {children}
@@ -623,7 +586,7 @@ const TiltLoginCard = ({ children, shakeSignal }) => {
 };
 
 const EmptyState = ({ onAdd }) => (
-  <div className="col-span-full text-center py-20 bg-[#2f315c] rounded-3xl border border-dashed border-[#5b6190] relative overflow-hidden">
+  <div className="col-span-full text-center py-20 bg-[#2f315c]/70 backdrop-blur-xl rounded-3xl border border-dashed border-[#5b6190] relative overflow-hidden">
     <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} className="mx-auto mb-6 w-16 h-16 rounded-2xl bg-[#1b1b36] border border-[#5b6190] flex items-center justify-center text-[#bbbcde]">
       <IconBookOpen className="w-8 h-8" />
     </motion.div>
@@ -635,10 +598,21 @@ const EmptyState = ({ onAdd }) => (
   </div>
 );
 
-// --- Subject Card (Added Delete Button)[cite: 1]---
+// --- Subject Cards Variations ---
+const SUBJECT_BG_COLORS = [
+  'bg-[#2f315c]/80', // Default Persian Plush dark
+  'bg-[#343563]/80', // Slightly lighter tint
+  'bg-[#2a2b54]/80', // Slightly darker tint
+  'bg-[#393a6b]/80', // Subtly deeper purple tint
+  'bg-[#26284f]/80'  // Very dark muted tint
+];
+
 const SubjectCard = ({ subject, index, reduceMotion, newTopicInput, onTopicInputChange, onAddTopic, onToggleTopic, onDateChange, onDeleteSubject }) => {
   const progress = subject.syllabus.length === 0 ? 0 : Math.round((subject.syllabus.filter((t) => t.completed).length / subject.syllabus.length) * 100);
   const { rotateX, rotateY, handleMove, reset } = useTilt(reduceMotion, 5);
+  
+  // Assign a slightly different background color based on index
+  const cardBgColor = SUBJECT_BG_COLORS[index % SUBJECT_BG_COLORS.length];
 
   return (
     <motion.div
@@ -648,9 +622,9 @@ const SubjectCard = ({ subject, index, reduceMotion, newTopicInput, onTopicInput
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? {} : { y: -6 }}
       transition={{ duration: 0.45, delay: reduceMotion ? 0 : index * 0.06, ease: 'easeOut' }}
-      className="group bg-[#2f315c] border border-[#5b6190] rounded-3xl p-7 shadow-2xl hover:border-[#bbbcde] transition-colors duration-300 flex flex-col h-full relative overflow-hidden"
+      className={`group ${cardBgColor} backdrop-blur-xl border border-[#5b6190] rounded-3xl p-7 shadow-2xl hover:border-[#bbbcde] transition-colors duration-300 flex flex-col h-full relative overflow-hidden`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#bbbcde]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#bbbcde]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
       {progress === 100 && (
         <div className="absolute top-4 right-4 z-10 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
@@ -658,7 +632,7 @@ const SubjectCard = ({ subject, index, reduceMotion, newTopicInput, onTopicInput
         </div>
       )}
 
-      {/* Delete Subject Button[cite: 1]*/}
+      {/* Delete Subject Button */}
       <button 
         onClick={() => onDeleteSubject(subject.id)} 
         className="absolute top-4 right-[100px] z-20 text-[#a3a4c4] hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-400/10 transition-all opacity-0 group-hover:opacity-100"
@@ -677,14 +651,17 @@ const SubjectCard = ({ subject, index, reduceMotion, newTopicInput, onTopicInput
             )}
           </div>
         </div>
-        <ProgressCircle progress={progress} size={64} strokeWidth={5} color="stroke-[#bbbcde]" />
+        {/* Moved progress circle down slightly with mt-4 */}
+        <div className="mt-4 shrink-0">
+          <ProgressCircle progress={progress} size={64} strokeWidth={5} color="stroke-[#bbbcde]" />
+        </div>
       </div>
 
       <UrgencySlider dateString={subject.date} />
 
       <div className="space-y-2.5 mt-2 flex-1 overflow-y-auto pr-2 max-h-[280px] relative z-10">
         {subject.syllabus.map((topic) => (
-          <label key={topic.id} className={`flex items-start gap-4 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 border ${topic.completed ? 'bg-[#1b1b36]/60 border-[#bbbcde]/20' : 'bg-[#1b1b36]/30 border-transparent hover:bg-[#1b1b36] hover:border-[#5b6190]'}`}>
+          <label key={topic.id} className={`flex items-start gap-4 p-3.5 rounded-2xl cursor-pointer transition-all duration-200 border ${topic.completed ? 'bg-[#1b1b36]/60 border-[#bbbcde]/20' : 'bg-[#1b1b36]/30 border-transparent hover:bg-[#1b1b36]/70 hover:border-[#5b6190]'}`}>
             <AnimatedCheckbox checked={topic.completed} onChange={() => onToggleTopic(topic.id)} />
             <span className={`text-sm font-medium leading-relaxed transition-colors ${topic.completed ? 'text-[#a3a4c4] line-through' : 'text-[#d3d6eb]'}`}>{topic.topic}</span>
           </label>
@@ -697,7 +674,7 @@ const SubjectCard = ({ subject, index, reduceMotion, newTopicInput, onTopicInput
           type="text" placeholder="Add syllabus topic..." value={newTopicInput}
           onChange={(e) => onTopicInputChange(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onAddTopic()}
-          className="flex-1 bg-[#1b1b36] border border-[#5b6190] rounded-xl p-3 text-sm text-[#d3d6eb] focus:border-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4]"
+          className="flex-1 bg-[#1b1b36]/60 backdrop-blur-sm border border-[#5b6190] rounded-xl p-3 text-sm text-[#d3d6eb] focus:border-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4]"
         />
         <RippleButton onClick={onAddTopic} className="bg-[#5b6190] hover:bg-[#bbbcde] text-[#d3d6eb] hover:text-[#1b1b36] px-4 py-2 rounded-xl text-lg font-black transition-all duration-300 active:scale-95">
           +
@@ -865,7 +842,6 @@ export default function App() {
     setShowAddSubject(false);
   };
 
-  // --- Deletion Handler[cite: 1]---
   const handleDeleteSubject = (subjectId) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       setSubjects(prev => prev.filter(sub => sub.id !== subjectId));
@@ -906,12 +882,12 @@ export default function App() {
   const loginView = (
     <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: 0.5 }} className="min-h-screen relative font-sans text-[#d3d6eb]">
       <GlobalStyles />
-      <NeuronBackground aurora reduce={reduceMotion} />
+      <LiquidBackground />
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
-      <div className="relative min-h-screen flex flex-col lg:flex-row items-center justify-center gap-12 px-6 py-14 lg:px-16 max-w-7xl mx-auto">
+      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-12 px-6 py-14 lg:px-16 max-w-7xl mx-auto">
         <div className="flex-1 max-w-xl w-full">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 bg-[#2f315c] border border-[#5b6190] rounded-full px-4 py-1.5 mb-6 text-xs font-semibold text-[#bbbcde] tracking-wide">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="inline-flex items-center gap-2 bg-[#2f315c]/70 backdrop-blur-md border border-[#5b6190] rounded-full px-4 py-1.5 mb-6 text-xs font-semibold text-[#bbbcde] tracking-wide">
             <IconSparkle className="w-3.5 h-3.5" /> Built for finals season
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }} className="font-display text-4xl md:text-5xl font-extrabold text-[#d3d6eb] leading-tight tracking-tight mb-4">
@@ -963,7 +939,7 @@ export default function App() {
                 />
                 {isSignUp && <PasswordStrengthMeter validations={validations} password={pwd} />}
                 {isSignUp && pwd.length > 0 && (
-                  <div className="mt-3 p-4 bg-[#1b1b36] rounded-xl border border-[#5b6190] grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                  <div className="mt-3 p-4 bg-[#1b1b36]/60 backdrop-blur-sm rounded-xl border border-[#5b6190] grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                     {[
                       ['length', '8+ characters'], ['upper', 'Uppercase'], ['lower', 'Lowercase'],
                       ['number', 'Number'], ['special', 'Special char'], ['noSpace', 'No spaces'],
@@ -996,9 +972,9 @@ export default function App() {
 
   // --- DASHBOARD VIEW ---
   const dashboardView = (
-    <motion.div key="dashboard" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} className="min-h-screen relative font-sans text-[#d3d6eb] pb-20 bg-[#1b1b36]">
+    <motion.div key="dashboard" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} className="min-h-screen relative font-sans text-[#d3d6eb] pb-20">
       <GlobalStyles />
-      <NeuronBackground reduce={reduceMotion} />
+      <LiquidBackground />
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
       <ConfettiLayer trigger={confettiTrigger} />
 
@@ -1016,12 +992,12 @@ export default function App() {
         </div>
       </nav>
 
-      <div className="pt-28 px-6 md:px-10 max-w-7xl mx-auto animate-[fadeIn_0.5s_ease-out]">
+      <div className="pt-28 px-6 md:px-10 max-w-7xl mx-auto animate-[fadeIn_0.5s_ease-out] relative z-10">
 
         {/* Dashboard Top Row (Stats + Clock) */}
         <div className="mb-10 flex flex-col md:flex-row gap-6 w-full">
           
-          <div className="flex-1 flex flex-col items-start justify-between bg-[#2f315c] border border-[#5b6190] rounded-3xl p-8 shadow-2xl relative overflow-hidden group hover:border-[#bbbcde] transition-all duration-500">
+          <div className="flex-1 flex flex-col items-start justify-between bg-[#2f315c]/70 backdrop-blur-xl border border-[#5b6190] rounded-3xl p-8 shadow-2xl relative overflow-hidden group hover:border-[#bbbcde] transition-all duration-500">
             <div className="absolute top-0 left-0 w-64 h-64 bg-[#bbbcde]/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-[#bbbcde]/10 transition-all duration-700"></div>
 
             <div className="z-10 w-full flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -1035,7 +1011,7 @@ export default function App() {
                 </RippleButton>
               </div>
 
-              <div className="flex items-center gap-6 bg-[#1b1b36] p-6 rounded-2xl border border-[#5b6190] z-10 w-full md:w-auto justify-between shadow-inner">
+              <div className="flex items-center gap-6 bg-[#1b1b36]/60 backdrop-blur-md p-6 rounded-2xl border border-[#5b6190] z-10 w-full md:w-auto justify-between shadow-inner">
                 <div className="text-right">
                   <p className="text-[10px] text-[#bbbcde] uppercase tracking-widest font-bold mb-1">Total Mastery</p>
                   <p className="font-mono-stat text-4xl font-black text-[#d3d6eb]">
@@ -1047,7 +1023,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Clock Widget Display[cite: 1]*/}
           <ClockWidget />
 
         </div>
@@ -1057,18 +1032,18 @@ export default function App() {
             <motion.form
               onSubmit={handleAddSubject}
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35 }}
-              className="mb-10 bg-[#2f315c] border border-[#bbbcde] p-8 rounded-3xl grid grid-cols-1 md:grid-cols-5 gap-5 shadow-2xl overflow-hidden"
+              className="mb-10 bg-[#2f315c]/80 backdrop-blur-xl border border-[#bbbcde] p-8 rounded-3xl grid grid-cols-1 md:grid-cols-5 gap-5 shadow-2xl overflow-hidden"
             >
               <input
                 type="text" placeholder="Subject Name" required value={newSubject.name}
                 onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
-                className="bg-[#1b1b36] text-[#d3d6eb] border border-[#5b6190] rounded-xl p-3.5 focus:border-[#bbbcde] focus:ring-1 focus:ring-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4] md:col-span-2"
+                className="bg-[#1b1b36]/60 backdrop-blur-sm text-[#d3d6eb] border border-[#5b6190] rounded-xl p-3.5 focus:border-[#bbbcde] focus:ring-1 focus:ring-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4] md:col-span-2"
               />
               <NativeDatePicker value={newSubject.date} onChange={(d) => setNewSubject({ ...newSubject, date: d })} placeholder="Exam date" />
               <input
                 type="text" placeholder="Time (e.g. 10 AM)" value={newSubject.time}
                 onChange={(e) => setNewSubject({ ...newSubject, time: e.target.value })}
-                className="bg-[#1b1b36] text-[#d3d6eb] border border-[#5b6190] rounded-xl p-3.5 focus:border-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4]"
+                className="bg-[#1b1b36]/60 backdrop-blur-sm text-[#d3d6eb] border border-[#5b6190] rounded-xl p-3.5 focus:border-[#bbbcde] outline-none transition-all placeholder:text-[#a3a4c4]"
               />
               <RippleButton type="submit" className="bg-[#bbbcde] text-[#1b1b36] hover:bg-[#d3d6eb] font-bold py-3.5 rounded-xl transition-all duration-300 shadow-lg active:scale-95">
                 Save Subject
