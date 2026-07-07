@@ -549,10 +549,17 @@ const TopNav = memo(() => {
   return (
     <nav className={`fixed top-0 w-full z-50 flex justify-between items-center transition-all duration-300 ${scrolled ? 'bg-[#080f1a]/80 backdrop-blur-2xl border-b border-[#205a6b] px-6 py-3' : 'bg-[#080f1a]/40 backdrop-blur-xl border-b border-[#205a6b]/50 px-6 py-4'}`} style={{ transform: 'translateZ(0)' }}>
       <div className="flex items-center gap-3">
-        <motion.div whileHover={{ rotate: 8, scale: 1.05 }} className={`bg-[#00f0ff] rounded-lg flex items-center justify-center shadow-lg transition-all duration-300 ${scrolled ? 'w-7 h-7' : 'w-8 h-8'}`}>
-          <span className="text-[#080f1a] font-bold text-sm">ET</span>
-        </motion.div>
-        <span className="text-lg font-bold text-[#e0fbff] tracking-wide font-display">Exam Tracker</span>
+        
+     
+        <motion.img 
+          src="/logo.png" 
+          alt="usaf,s creations logo"
+          whileHover={{ rotate: 8, scale: 1.05 }} 
+          className={`rounded-full shadow-lg transition-all duration-300 object-cover ${scrolled ? 'w-7 h-7' : 'w-10 h-10'}`}
+        />
+        
+        {/* Updated the site name text */}
+        <span className="text-lg font-bold text-[#e0fbff] tracking-wide font-display">Exams Tracker</span>
       </div>
       <div className="flex items-center gap-4">
         <a href="https://github.com/uusaff" target="_blank" rel="noopener noreferrer" className="text-[#77c7d4] hover:text-[#e0fbff] transition-colors"><GithubIcon /></a>
